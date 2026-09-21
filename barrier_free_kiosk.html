@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barrier-Free Kiosk</title>
+<style>
+:root{
+  --accent:#ffb800;--bg:#f3f4f6;--panel:#fff;--text:#171717;--muted:#686868;
+  --dark:#171717;--line:#dedede;--danger:#d92d20;--green:#16803c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(135deg,#dfe2e6,#f8f8f8);font-family:Arial,"Noto Sans KR",sans-serif;color:var(--text);overflow:hidden}
+button{font:inherit;cursor:pointer}
+.kiosk{width:min(1450px,96vw);height:94vh;margin:3vh auto;background:#d8d9db;border-radius:34px;padding:28px;box-shadow:0 25px 70px #0003;display:flex;flex-direction:column}
+.header{height:74px;display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+.brand{font-size:28px;font-weight:800}.status{display:flex;gap:10px;align-items:center;color:#555}
+.dot{width:11px;height:11px;border-radius:50%;background:#25a65a}
+.screen{flex:1;min-height:0;background:var(--panel);border-radius:25px;overflow:hidden;display:flex;border:1px solid #ccc}
+.side{width:190px;background:#202124;color:#fff;padding:20px 14px;display:flex;flex-direction:column;gap:9px}
+.side h2{margin:3px 10px 18px;font-size:20px;color:#ddd}
+.cat{border:0;background:transparent;color:#eee;border-radius:14px;padding:18px 12px;text-align:left;font-weight:700;font-size:19px}
+.cat.active,.cat:hover{background:var(--accent);color:#111}
+.main{flex:1;min-width:0;padding:30px 34px;overflow:auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.top h1{font-size:35px;margin:0}.top p{margin:7px 0 0;color:var(--muted)}
+.search{border:1px solid var(--line);border-radius:13px;padding:13px 16px;width:230px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:18px;margin-top:24px}
+.card{border:1px solid #e1e1e1;border-radius:19px;padding:14px;background:#fff;box-shadow:0 5px 16px #0000000b}
+.food{height:145px;border-radius:14px;background:#f3f3f3;display:grid;place-items:center;font-size:76px}
+.card h3{margin:12px 3px 5px;font-size:20px}.price{font-weight:800;font-size:18px}
+.add{width:100%;border:0;border-radius:11px;padding:13px;margin-top:12px;background:var(--accent);font-weight:800}
+.access{display:flex;gap:12px;margin-top:22px}.access button{flex:1;padding:15px;border:1px solid #ddd;border-radius:12px;background:#f6f6f6;font-weight:700}
+.bottom{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:18px}
+.control{border:0;background:#252525;color:#fff;border-radius:13px;padding:17px 8px;font-weight:700}
+.control.danger{background:var(--danger)}
+.braille{margin-top:10px;background:#292929;color:#fff;text-align:center;border-radius:10px;padding:10px;letter-spacing:9px}
+.height{position:fixed;left:25px;bottom:25px;background:#fff;padding:17px;border-radius:15px;box-shadow:0 10px 30px #0003;z-index:10}
+.height button{border:1px solid #ccc;background:#fff;border-radius:8px;padding:8px 13px}
+.cart{position:fixed;right:25px;bottom:25px;width:370px;max-height:70vh;background:#fff;border-radius:20px;box-shadow:0 18px 60px #0005;padding:22px;display:none;z-index:20}
+.cart.show{display:block}.cart h2{margin:0 0 12px}.cartrow{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #eee}.pay{width:100%;border:0;border-radius:12px;background:#111;color:#fff;padding:16px;margin-top:14px;font-weight:800}
+.modal{position:fixed;inset:0;background:#0008;display:none;place-items:center;z-index:30}.modal.show{display:grid}
+.modalbox{width:min(620px,90vw);background:#fff;border-radius:24px;padding:28px}.modalbox h2{margin-top:0}.modalgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.option{padding:18px;border:1px solid #ddd;border-radius:13px;background:#fafafa;text-align:left}.close{margin-top:18px;width:100%;padding:14px;border:0;border-radius:12px;background:#222;color:#fff}
+.large{font-size:1.22em}.large .top h1{font-size:43px}.large .card h3{font-size:25px}
+.contrast{--bg:#000;--panel:#000;--text:#fff;--muted:#fff;--line:#fff}.contrast .main,.contrast .card,.contrast .access button,.contrast .modalbox{background:#000;color:#fff}.contrast .card{border:2px solid #fff}.contrast .add{background:#fff;color:#000}.contrast .access button{border:2px solid #fff}
+@media(max-width:1000px){.kiosk{width:100vw;height:100vh;margin:0;border-radius:0}.grid{grid-template-columns:repeat(2,1fr)}.side{width:145px}.bottom{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="kiosk" id="kiosk">
+  <div class="header">
+    <div class="brand">ACCESS KIOSK</div>
+    <div class="status"><span class="dot"></span> 도움 기능 사용 가능</div>
+  </div>
+
+  <div class="screen">
+    <aside class="side">
+      <h2>카테고리</h2>
+      <button class="cat active" data-cat="추천">⭐ 추천</button>
+      <button class="cat" data-cat="버거">🍔 버거</button>
+      <button class="cat" data-cat="치킨">🍗 치킨</button>
+      <button class="cat" data-cat="음료">🥤 음료</button>
+      <button class="cat" data-cat="사이드">🍟 사이드</button>
+      <button class="cat" data-cat="세트">🍱 세트</button>
+    </aside>
+
+    <main class="main">
+      <div class="top">
+        <div><h1 id="title">추천 메뉴</h1><p>원하는 메뉴를 선택하고 담아주세요.</p></div>
+        <input class="search" id="search" placeholder="🔎 메뉴 검색">
+      </div>
+      <div class="grid" id="grid"></div>
+
+      <div class="access">
+        <button id="largeBtn">🔠 큰 글씨</button>
+        <button id="voiceBtn">🔊 음성 안내</button>
+        <button id="contrastBtn">◐ 고대비</button>
+        <button id="angleBtn">↕ 화면 각도</button>
+      </div>
+    </main>
+  </div>
+
+  <div class="bottom">
+    <button class="control danger" id="helpBtn">🆘 도움 요청</button>
+    <button class="control" id="earBtn">🎧 이어폰 안내</button>
+    <button class="control" id="cartBtn">🛒 주문 내역</button>
+    <button class="control" id="nfcBtn">💳 카드 / NFC</button>
+    <button class="control" id="receiptBtn">🧾 영수증</button>
+  </div>
+  <div class="braille">⠠⠊⠉⠑⠎⠎ ⠠⠅⠊⠕⠎⠅</div>
+</div>
+
+<div class="height">
+  <b>화면 높이 조절</b><br><br>
+  <button onclick="height(-1)">▲</button>
+  <span id="heightVal">100%</span>
+  <button onclick="height(1)">▼</button>
+</div>
+
+<div class="cart" id="cart">
+  <h2>🛒 주문 내역</h2>
+  <div id="cartItems"></div>
+  <hr>
+  <b>총 결제금액 <span style="float:right" id="total">₩0</span></b>
+  <button class="pay" id="payBtn">결제하기</button>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modalbox">
+    <h2 id="modalTitle">결제 방법</h2>
+    <div class="modalgrid" id="modalGrid"></div>
+    <button class="close" onclick="closeModal()">닫기</button>
+  </div>
+</div>
+
+<script>
+const foods={
+  추천:[["불고기 버거","6,000","🍔"],["후라이드 치킨","9,000","🍗"],["콜라","1,500","🥤"],["감자튀김","2,500","🍟"]],
+  버거:[["불고기 버거","6,000","🍔"],["치즈 버거","6,500","🍔"],["새우 버거","7,000","🍔"],["더블 버거","8,500","🍔"]],
+  치킨:[["후라이드 치킨","9,000","🍗"],["양념 치킨","9,500","🍗"],["간장 치킨","9,500","🍗"],["치킨너겟","5,000","🍗"]],
+  음료:[["콜라","1,500","🥤"],["사이다","1,500","🥤"],["아메리카노","2,000","☕"],["물","1,000","💧"]],
+  사이드:[["감자튀김","2,500","🍟"],["치즈스틱","3,000","🧀"],["너겟","5,000","🍗"],["샐러드","4,000","🥗"]],
+  세트:[["버거 세트","8,500","🍔"],["치킨 세트","11,000","🍗"],["패밀리 세트","25,000","🍱"],["어린이 세트","7,000","🍱"]]
+};
+let current="추천", cart=[], total=0, h=100;
+
+const grid=document.getElementById("grid"), search=document.getElementById("search");
+function render(){
+  const q=search.value.trim();
+  grid.innerHTML="";
+  foods[current].filter(x=>x[0].includes(q)).forEach(x=>{
+    const c=document.createElement("div"); c.className="card";
+    c.innerHTML=`<div class="food">${x[2]}</div><h3>${x[0]}</h3><div class="price">₩${x[1]}</div><button class="add">담기</button>`;
+    c.querySelector(".add").onclick=()=>add(x[0],Number(x[1].replace(",","")));
+    grid.appendChild(c);
+  });
+}
+function add(name,price){cart.push({name,price});total+=price;renderCart();speak(name+"가 주문에 추가되었습니다.");}
+function renderCart(){
+  document.getElementById("cartItems").innerHTML=cart.length?cart.map((x,i)=>`<div class="cartrow"><span>${x.name}</span><b>₩${x.price.toLocaleString()}</b></div>`).join(""):"주문한 메뉴가 없습니다.";
+  document.getElementById("total").textContent="₩"+total.toLocaleString();
+}
+function speak(t){if("speechSynthesis" in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang="ko-KR";u.rate=.9;speechSynthesis.speak(u)}else alert(t)}
+function modal(title,items){document.getElementById("modalTitle").textContent=title;document.getElementById("modalGrid").innerHTML=items.map(x=>`<button class="option">${x}</button>`).join("");document.getElementById("modal").classList.add("show")}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+document.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));b.classList.add("active");current=b.dataset.cat;document.getElementById("title").textContent=current+" 메뉴";render();speak(current+" 메뉴입니다.")});
+search.oninput=render;
+document.getElementById("largeBtn").onclick=()=>{document.getElementById("kiosk").classList.toggle("large");speak("큰 글씨 모드를 변경했습니다.")};
+document.getElementById("contrastBtn").onclick=()=>{document.getElementById("kiosk").classList.toggle("contrast");speak("고대비 모드를 변경했습니다.")};
+document.getElementById("voiceBtn").onclick=()=>speak("현재 "+current+" 메뉴가 표시되어 있습니다. 원하는 메뉴를 선택해주세요.");
+document.getElementById("earBtn").onclick=()=>speak("이어폰 안내가 활성화되었습니다. 화면의 내용을 음성으로 안내합니다.");
+document.getElementById("helpBtn").onclick=()=>{modal("도움 요청",["직원 호출","화면 사용 도움","휠체어 사용자 도움"]);speak("도움 요청 메뉴입니다.")};
+document.getElementById("cartBtn").onclick=()=>document.getElementById("cart").classList.toggle("show");
+document.getElementById("nfcBtn").onclick=()=>modal("결제 방법",["💳 신용카드","📱 NFC / 모바일 결제","💵 현금"]);
+document.getElementById("receiptBtn").onclick=()=>modal("영수증",["🧾 종이 영수증","📱 모바일 영수증","❌ 영수증 안 받기"]);
+document.getElementById("angleBtn").onclick=()=>modal("화면 각도 조절",["↖ 위로 기울이기","● 기본 각도","↘ 아래로 기울이기"]);
+document.getElementById("payBtn").onclick=()=>{if(!cart.length){speak("주문 내역이 비어 있습니다.");return}modal("결제 방법",["💳 카드 결제","📱 NFC / 모바일 결제","💵 현금 결제"]);};
+function height(dir){h=Math.max(70,Math.min(130,h+dir*10));document.getElementById("heightVal").textContent=h+"%";speak("화면 높이를 "+h+"퍼센트로 설정했습니다.");}
+render();
+</script>
+</body>
+</html>
