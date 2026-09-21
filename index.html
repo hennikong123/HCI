@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#202124">
+<title>ACCESS KIOSK</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Apple SD Gothic Neo",sans-serif;background:#dfe1e5;color:#171717}
+button,input{font:inherit}
+button{touch-action:manipulation}
+.app{height:100dvh;display:flex;flex-direction:column;background:#d9dbde}
+.topbar{height:64px;min-height:64px;padding:0 18px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:21px;font-weight:800}.status{font-size:13px;color:#555}.status i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#25a65a;margin-right:6px}
+.body{min-height:0;flex:1;padding:0 14px 14px}
+.device{height:100%;background:#fff;border-radius:25px;overflow:hidden;display:flex;box-shadow:0 10px 30px #0002}
+.side{width:150px;min-width:150px;background:#202124;color:#fff;padding:17px 10px;display:flex;flex-direction:column;gap:7px}
+.side h2{font-size:17px;margin:5px 8px 18px;color:#ddd}
+.cat{border:0;border-radius:12px;background:transparent;color:#eee;text-align:left;padding:16px 11px;font-weight:700;font-size:16px}
+.cat.active{background:#ffb800;color:#111}
+.content{min-width:0;flex:1;padding:24px;overflow:auto;-webkit-overflow-scrolling:touch}
+.head{display:flex;align-items:center;justify-content:space-between;gap:15px}
+h1{font-size:29px;margin:0 0 5px}.sub{color:#777;font-size:14px}
+.search{width:210px;border:1px solid #ddd;border-radius:11px;padding:11px 13px;outline:0}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:15px;margin-top:20px}
+.card{border:1px solid #e3e3e3;border-radius:16px;padding:11px;background:#fff;box-shadow:0 3px 10px #0000000b}
+.pic{height:115px;border-radius:12px;background:#f2f2f2;display:grid;place-items:center;font-size:62px}
+.card h3{font-size:17px;margin:10px 2px 5px}.price{font-weight:800}
+.add{width:100%;border:0;border-radius:9px;padding:11px;margin-top:10px;background:#ffb800;font-weight:800}
+.access{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:17px}
+.access button{border:1px solid #ddd;background:#f6f6f6;border-radius:10px;padding:12px;font-weight:700}
+.controls{padding:0 14px 13px;display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+.ctrl{border:0;border-radius:11px;background:#262626;color:#fff;padding:14px 5px;font-weight:700}
+.ctrl.red{background:#cf3026}.braille{margin:0 14px 10px;padding:7px;text-align:center;background:#292929;color:#fff;border-radius:8px;letter-spacing:7px;font-size:12px}
+.cart{position:fixed;right:18px;bottom:18px;width:min(390px,calc(100vw - 36px));max-height:70dvh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 15px 55px #0005;display:none;z-index:20}
+.cart.show{display:block}.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #eee}
+.pay{width:100%;border:0;border-radius:10px;padding:14px;background:#111;color:#fff;font-weight:800}
+.modal{position:fixed;inset:0;background:#0008;display:none;place-items:center;z-index:30;padding:20px}.modal.show{display:grid}
+.box{width:min(570px,100%);background:#fff;border-radius:20px;padding:23px}.box h2{margin:0 0 15px}.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{border:1px solid #ddd;background:#fafafa;border-radius:11px;padding:16px;text-align:left}.close{width:100%;margin-top:14px;padding:13px;border:0;border-radius:10px;background:#222;color:#fff}
+.float{position:fixed;left:15px;bottom:15px;background:#fff;border-radius:14px;padding:12px;box-shadow:0 8px 25px #0003;z-index:10;font-size:13px}.float button{border:1px solid #ccc;background:#fff;border-radius:7px;padding:7px 11px;margin:0 3px}
+.large .content{font-size:1.18em}.large h1{font-size:37px}.large .card h3{font-size:21px}
+.contrast{background:#000!important;color:#fff!important}.contrast .device,.contrast .content,.contrast .card,.contrast .access button,.contrast .search,.contrast .box{background:#000;color:#fff;border-color:#fff}.contrast .add{background:#fff;color:#000}.contrast .side{background:#000}
+@media(max-width:850px){.topbar{height:54px;min-height:54px}.side{width:105px;min-width:105px}.cat{font-size:14px;padding:13px 7px}.content{padding:17px}.grid{grid-template-columns:repeat(2,1fr)}.access{grid-template-columns:repeat(2,1fr)}.controls{grid-template-columns:repeat(3,1fr)}.controls .ctrl:nth-child(4),.controls .ctrl:nth-child(5){grid-column:auto}.search{width:150px}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<header class="topbar"><div class="logo">ACCESS KIOSK</div><div class="status"><i></i> 접근성 기능 사용 가능</div></header>
+<div class="body"><div class="device">
+<aside class="side"><h2>카테고리</h2>
+<button class="cat active" data-cat="추천">⭐ 추천</button>
+<button class="cat" data-cat="버거">🍔 버거</button>
+<button class="cat" data-cat="치킨">🍗 치킨</button>
+<button class="cat" data-cat="음료">🥤 음료</button>
+<button class="cat" data-cat="사이드">🍟 사이드</button>
+<button class="cat" data-cat="세트">🍱 세트</button></aside>
+<main class="content">
+<div class="head"><div><h1 id="title">추천 메뉴</h1><div class="sub">원하는 메뉴를 선택해주세요.</div></div><input id="search" class="search" placeholder="🔎 메뉴 검색"></div>
+<div id="grid" class="grid"></div>
+<div class="access">
+<button id="large">🔠 큰 글씨</button><button id="voice">🔊 음성 안내</button><button id="contrast">◐ 고대비</button><button id="angle">↕ 화면 각도</button>
+</div></main></div></div>
+<div class="controls">
+<button class="ctrl red" id="help">🆘 도움 요청</button><button class="ctrl" id="ear">🎧 이어폰 안내</button><button class="ctrl" id="cartBtn">🛒 주문 내역</button><button class="ctrl" id="nfc">💳 카드 / NFC</button><button class="ctrl" id="receipt">🧾 영수증</button>
+</div>
+<div class="braille">⠠⠊⠉⠑⠎⠎ ⠠⠅⠊⠕⠎⠅</div>
+</div>
+
+<div class="float"><b>화면 높이</b> <button onclick="moveHeight(-10)">▲</button><span id="height">100%</span><button onclick="moveHeight(10)">▼</button></div>
+<div id="cart" class="cart"><h2>🛒 주문 내역</h2><div id="items"></div><hr><b>총액 <span id="total" style="float:right">₩0</span></b><button id="pay" class="pay" style="margin-top:13px">결제하기</button></div>
+<div id="modal" class="modal"><div class="box"><h2 id="mtitle"></h2><div id="choices" class="choices"></div><button class="close" onclick="closeModal()">닫기</button></div></div>
+
+<script>
+const data={
+추천:[["불고기 버거",6000,"🍔"],["후라이드 치킨",9000,"🍗"],["콜라",1500,"🥤"],["감자튀김",2500,"🍟"]],
+버거:[["불고기 버거",6000,"🍔"],["치즈 버거",6500,"🍔"],["새우 버거",7000,"🍔"],["더블 버거",8500,"🍔"]],
+치킨:[["후라이드 치킨",9000,"🍗"],["양념 치킨",9500,"🍗"],["간장 치킨",9500,"🍗"],["치킨너겟",5000,"🍗"]],
+음료:[["콜라",1500,"🥤"],["사이다",1500,"🥤"],["아메리카노",2000,"☕"],["물",1000,"💧"]],
+사이드:[["감자튀김",2500,"🍟"],["치즈스틱",3000,"🧀"],["너겟",5000,"🍗"],["샐러드",4000,"🥗"]],
+세트:[["버거 세트",8500,"🍔"],["치킨 세트",11000,"🍗"],["패밀리 세트",25000,"🍱"],["어린이 세트",7000,"🍱"]]
+};
+let cat="추천",cart=[],sum=0,heightValue=100;
+const $=id=>document.getElementById(id);
+function speak(t){if(window.speechSynthesis){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang="ko-KR";u.rate=.9;speechSynthesis.speak(u)}}
+function render(){let q=$("search").value.trim();$("grid").innerHTML="";data[cat].filter(x=>x[0].includes(q)).forEach(x=>{let d=document.createElement("div");d.className="card";d.innerHTML=`<div class="pic">${x[2]}</div><h3>${x[0]}</h3><div class="price">₩${x[1].toLocaleString()}</div><button class="add">담기</button>`;d.querySelector(".add").onclick=()=>{cart.push(x);sum+=x[1];renderCart();speak(x[0]+"를 담았습니다.")};$("grid").appendChild(d)})}
+function renderCart(){$("items").innerHTML=cart.length?cart.map(x=>`<div class="row"><span>${x[0]}</span><b>₩${x[1].toLocaleString()}</b></div>`).join(""):"주문 내역이 비어 있습니다.";$("total").textContent="₩"+sum.toLocaleString()}
+function modal(t,arr){$("mtitle").textContent=t;$("choices").innerHTML=arr.map(x=>`<button class="choice">${x}</button>`).join("");$("modal").classList.add("show")}
+function closeModal(){$("modal").classList.remove("show")}
+document.querySelectorAll(".cat").forEach(b=>b.onclick=()=>{document.querySelectorAll(".cat").forEach(x=>x.classList.remove("active"));b.classList.add("active");cat=b.dataset.cat;$("title").textContent=cat+" 메뉴";render();speak(cat+" 메뉴입니다.")});
+$("search").oninput=render;
+$("large").onclick=()=>{$("app").classList.toggle("large");speak("큰 글씨 모드를 변경했습니다.")};
+$("contrast").onclick=()=>{$("app").classList.toggle("contrast");speak("고대비 모드를 변경했습니다.")};
+$("voice").onclick=()=>speak("현재 "+cat+" 메뉴입니다. 원하는 메뉴를 선택해주세요.");
+$("ear").onclick=()=>speak("이어폰 안내를 시작합니다.");
+$("help").onclick=()=>modal("도움 요청",["직원 호출","화면 사용 도움","휠체어 사용자 도움"]);
+$("cartBtn").onclick=()=> $("cart").classList.toggle("show");
+$("nfc").onclick=()=>modal("결제 방법",["💳 신용카드","📱 NFC / 모바일","💵 현금"]);
+$("receipt").onclick=()=>modal("영수증",["🧾 종이 영수증","📱 모바일 영수증","받지 않기"]);
+$("angle").onclick=()=>modal("화면 각도 조절",["↖ 위로","● 기본","↘ 아래로"]);
+$("pay").onclick=()=>sum?modal("결제 방법",["💳 카드 결제","📱 NFC / 모바일 결제","💵 현금 결제"]):speak("주문 내역이 비어 있습니다.");
+function moveHeight(v){heightValue=Math.max(70,Math.min(130,heightValue+v));$("height").textContent=heightValue+"%";speak("화면 높이를 "+heightValue+"퍼센트로 설정했습니다.")}
+render();
+</script>
+</body>
+</html>
